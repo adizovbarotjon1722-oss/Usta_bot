@@ -1,0 +1,221 @@
+from aiogram.types import (
+    ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove,
+    InlineKeyboardMarkup, InlineKeyboardButton,
+)
+from config import SERVICE_TYPES
+from i18n import TEXTS, t, service_name
+
+# ---------- Har bir tugma uchun barcha tillardagi variantlar (filter uchun) ----------
+def _all_langs(key):
+    return list(TEXTS[key].values())
+
+BTN_CUSTOMER_ALL = _all_langs("btn_customer")
+BTN_MASTER_ALL = _all_langs("btn_master")
+BTN_SUPPORT_ALL = _all_langs("btn_support")
+BTN_BALANCE_ALL = _all_langs("btn_balance")
+BTN_PROFILE_ALL = _all_langs("btn_profile")
+BTN_TOGGLE_BUSY_ALL = _all_langs("btn_toggle_busy")
+BTN_TOPUP_ALL = _all_langs("btn_topup")
+BTN_NEW_ORDER_ALL = _all_langs("btn_new_order")
+BTN_CANCEL_ALL = _all_langs("btn_cancel")
+BTN_SKIP_PHOTO_ALL = _all_langs("btn_skip_photo")
+
+# ---------- Standart (uz) qiymatlar — eski kod bilan moslik uchun ----------
+BTN_CUSTOMER = TEXTS["btn_customer"]["uz"]
+BTN_MASTER = TEXTS["btn_master"]["uz"]
+BTN_SUPPORT = TEXTS["btn_support"]["uz"]
+BTN_BALANCE = TEXTS["btn_balance"]["uz"]
+BTN_PROFILE = TEXTS["btn_profile"]["uz"]
+BTN_TOGGLE_BUSY = TEXTS["btn_toggle_busy"]["uz"]
+BTN_TOPUP = TEXTS["btn_topup"]["uz"]
+BTN_NEW_ORDER = TEXTS["btn_new_order"]["uz"]
+BTN_CANCEL = TEXTS["btn_cancel"]["uz"]
+
+
+def language_choice_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🇺🇿 O'zbek", callback_data="lang:uz"),
+            InlineKeyboardButton(text="🇷🇺 Русский", callback_data="lang:ru"),
+            InlineKeyboardButton(text="🇬🇧 English", callback_data="lang:en"),
+        ]
+    ])
+
+
+def role_choice_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=t("btn_customer", lang)),
+                KeyboardButton(text=t("btn_master", lang)),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def customer_menu_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t("btn_new_order", lang))],
+            [KeyboardButton(text=t("btn_support", lang))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def master_menu_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t("btn_profile", lang)), KeyboardButton(text=t("btn_balance", lang))],
+            [KeyboardButton(text=t("btn_toggle_busy", lang)), KeyboardButton(text=t("btn_topup", lang))],
+            [KeyboardButton(text=t("btn_support", lang))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def cancel_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=t("btn_cancel", lang))]],
+        resize_keyboard=True,
+    )
+
+
+def service_type_kb(prefix: str, lang="uz"):
+    """prefix: 'cust_service' yoki 'mast_service' — callback_data ni farqlash uchun"""
+    buttons = [
+        [InlineKeyboardButton(text=service_name(key, lang), callback_data=f"{prefix}:{key}")]
+        for key in SERVICE_TYPES
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def contact_request_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t("btn_send_phone", lang), request_contact=True)],
+            [KeyboardButton(text=t("btn_cancel", lang))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def location_request_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t("btn_send_location", lang), request_location=True)],
+            [KeyboardButton(text=t("btn_cancel", lang))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def photo_request_kb(lang="uz"):
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=t("btn_skip_photo", lang))],
+            [KeyboardButton(text=t("btn_cancel", lang))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def remove_kb():
+    return ReplyKeyboardRemove()
+
+
+def masters_list_kb(enriched_masters):
+    """enriched_masters: [(master_row, distance_km), ...]"""
+    buttons = []
+    for m, dist in enriched_masters:
+        text = f"👤 {m['full_name']} | 📍{dist:.1f} km | ⭐{m['rating']:.1f}"
+        buttons.append([InlineKeyboardButton(text=text, callback_data=f"pick_master:{m['id']}")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def order_accept_kb(order_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Qabul qilish", callback_data=f"accept_order:{order_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"decline_order:{order_id}"),
+        ]
+    ])
+
+
+def price_confirm_kb(order_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"confirm_price:{order_id}"),
+            InlineKeyboardButton(text="❌ Bekor qilish", callback_data=f"cancel_order:{order_id}"),
+        ]
+    ])
+
+
+def low_price_confirm_kb(order_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Ha, shu narxda davom etaman", callback_data=f"low_price_ok:{order_id}")],
+        [InlineKeyboardButton(text="✏️ Narxni o'zgartiraman", callback_data=f"low_price_edit:{order_id}")],
+    ])
+
+
+def order_finish_kb(order_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Bajarildi deb belgilash", callback_data=f"finish_order:{order_id}")]
+    ])
+
+
+def rating_kb(order_id: int, role: str):
+    buttons = [
+        [InlineKeyboardButton(text="⭐" * i, callback_data=f"rate:{role}:{order_id}:{i}") for i in range(1, 4)],
+        [InlineKeyboardButton(text="⭐" * i, callback_data=f"rate:{role}:{order_id}:{i}") for i in range(4, 6)],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def admin_master_review_kb(master_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"admin_approve:{master_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"admin_reject:{master_id}"),
+        ]
+    ])
+
+
+def topup_admin_review_kb(request_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Qabul qilish", callback_data=f"topup_accept:{request_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"topup_reject_req:{request_id}"),
+        ]
+    ])
+
+
+def topup_confirm_kb(request_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ To'lovni tasdiqlash", callback_data=f"topup_confirm:{request_id}"),
+            InlineKeyboardButton(text="❌ Rad etish", callback_data=f"topup_reject_proof:{request_id}"),
+        ]
+    ])
+
+
+# ---------- Admin panel menyusi ----------
+BTN_ADMIN_PENDING = "⏳ Kutilayotgan ustalar"
+BTN_ADMIN_MASTERS = "🛠 Barcha ustalar"
+BTN_ADMIN_CUSTOMERS = "🙋 Barcha mijozlar"
+BTN_ADMIN_ACTIVE = "🔴 Faol buyurtmalar"
+BTN_ADMIN_ORDERS = "📋 Buyurtmalar tarixi"
+BTN_ADMIN_HELP = "ℹ️ Buyruqlar ro'yxati"
+
+
+def admin_menu_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_ADMIN_PENDING)],
+            [KeyboardButton(text=BTN_ADMIN_MASTERS), KeyboardButton(text=BTN_ADMIN_CUSTOMERS)],
+            [KeyboardButton(text=BTN_ADMIN_ACTIVE), KeyboardButton(text=BTN_ADMIN_ORDERS)],
+            [KeyboardButton(text=BTN_ADMIN_HELP)],
+        ],
+        resize_keyboard=True,
+    )
