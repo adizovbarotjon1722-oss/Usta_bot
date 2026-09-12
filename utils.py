@@ -67,7 +67,7 @@ def format_order_line(order) -> str:
 
 
 def format_master_line(m) -> str:
-    from config import SERVICE_TYPES
+    from i18n import service_names_display
     status_labels = {
         "pending": "⏳ Kutilmoqda",
         "verified": "✅ Tasdiqlangan",
@@ -79,7 +79,7 @@ def format_master_line(m) -> str:
     age_exp = f" | {m['age'] or '—'} yosh, {m['experience_years'] or '—'} tajriba"
     return (
         f"#{m['id']} | {m['full_name']} | {m['phone']}{extra} | "
-        f"{SERVICE_TYPES.get(m['service_type'], m['service_type'])}{age_exp} | "
+        f"{service_names_display(m['service_type'], 'uz')}{age_exp} | "
         f"{status_labels.get(m['status'], m['status'])} | {busy_text} | "
         f"⭐{m['rating']:.1f} | 💰{m['balance']:.0f} so'm"
     )

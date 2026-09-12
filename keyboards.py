@@ -91,6 +91,19 @@ def service_type_kb(prefix: str, lang="uz"):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def service_multiselect_kb(selected: list, lang="uz"):
+    """Usta bir nechta xizmat turini tanlashi uchun — belgilangan tugmalarda ✅ ko'rinadi."""
+    buttons = []
+    for key in SERVICE_TYPES:
+        mark = "✅ " if key in selected else ""
+        buttons.append([InlineKeyboardButton(
+            text=f"{mark}{service_name(key, lang)}", callback_data=f"mast_toggle:{key}"
+        )])
+    done_labels = {"uz": "✅ Tasdiqlash", "ru": "✅ Подтвердить", "en": "✅ Confirm"}
+    buttons.append([InlineKeyboardButton(text=done_labels.get(lang, done_labels["uz"]), callback_data="mast_service_done")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def contact_request_kb(lang="uz"):
     return ReplyKeyboardMarkup(
         keyboard=[
