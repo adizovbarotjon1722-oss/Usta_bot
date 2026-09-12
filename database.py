@@ -98,6 +98,15 @@ async def init_db():
                 updated_at TEXT
             )
         """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS insurance_fund_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                order_id INTEGER,
+                amount REAL,
+                note TEXT,
+                created_at TEXT
+            )
+        """)
 
         # Eski bazalarda yo'q bo'lishi mumkin bo'lgan ustunlarni xavfsiz qo'shish
         await _add_column_if_missing(db, "masters", "photo_file_id TEXT")
@@ -111,6 +120,12 @@ async def init_db():
         await _add_column_if_missing(db, "customers", "language TEXT DEFAULT 'uz'")
         await _add_column_if_missing(db, "orders", "warranty_until TEXT")
         await _add_column_if_missing(db, "customers", "completed_orders INTEGER DEFAULT 0")
+        await _add_column_if_missing(db, "masters", "criminal_record_photo TEXT")
+        await _add_column_if_missing(db, "masters", "qualification_photo TEXT")
+        await _add_column_if_missing(db, "orders", "warranty_claims_count INTEGER DEFAULT 0")
+        await _add_column_if_missing(db, "customers", "referred_by INTEGER")
+        await _add_column_if_missing(db, "customers", "referral_bonus_given INTEGER DEFAULT 0")
+        await _add_column_if_missing(db, "orders", "description_photo TEXT")
 
         await db.commit()
 
@@ -182,10 +197,14 @@ async def get_all_masters():
 
 
 async def get_verified_masters_by_service(service_type: str):
+    """Usta bir nechta xizmat turini ko'rsatishi mumkin (masters.service_type da
+    vergul bilan ajratilgan, masalan 'electric,plumber'), shuning uchun
+    aniq moslikni emas, ro'yxat ichida borligini tekshiramiz."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cur = await db.execute(
-            "SELECT * FROM masters WHERE service_type = ? AND status = 'verified' AND is_busy = 0",
+            "SELECT * FROM masters WHERE status = 'verified' AND is_busy = 0 "
+            "AND (',' || service_type || ',') LIKE ('%,' || ? || ',%')",
             (service_type,),
         )
         return await cur.fetchall()
@@ -257,13 +276,40 @@ async def set_master_status(master_id: int, status: str):
         await db.commit()
 
 
+async def add_customer_rating(customer_id: int, stars: int):
+    """Ikki tomonlama baholash: usta mijozni baholaganda ishlatiladi."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute("SELECT rating, rating_count FROM customers WHERE id = ?", (customer_id,))
+        row = await cur.fetchone()
+        if not row:
+            return None
+        new_count = row["rating_count"] + 1
+        new_rating = round((row["rating"] * row["rating_count"] + stars) / new_count, 2)
+        await db.execute(
+            "UPDATE customers SET rating = ?, rating_count = ? WHERE id = ?",
+            (new_rating, new_count, customer_id),
+        )
+        await db.commit()
+        return {"rating": new_rating, "rating_count": new_count}
+
+
 # ---------- CUSTOMERS ----------
 
-async def create_customer(telegram_id: int, language: str = "uz"):
+async def create_customer(telegram_id: int, language: str = "uz", referred_by: int = None):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
-            "INSERT OR IGNORE INTO customers (telegram_id, language, created_at) VALUES (?, ?, ?)",
-            (telegram_id, language, now()),
+            "INSERT OR IGNORE INTO customers (telegram_id, language, referred_by, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (telegram_id, language, referred_by, now()),
+        )
+        await db.commit()
+
+
+async def mark_referral_bonus_given(customer_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE customers SET referral_bonus_given = 1 WHERE id = ?", (customer_id,)
         )
         await db.commit()
 
@@ -297,6 +343,17 @@ async def get_all_customers():
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cur = await db.execute("SELECT * FROM customers ORDER BY id DESC")
+        return await cur.fetchall()
+
+
+async def get_customer_orders(customer_id: int, limit: int = 15):
+    """Mijozning o'z buyurtmalari (faol + tarix) — 'Mening buyurtmalarim' bo'limi uchun."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT * FROM orders WHERE customer_id = ? ORDER BY id DESC LIMIT ?",
+            (customer_id, limit),
+        )
         return await cur.fetchall()
 
 
@@ -371,6 +428,48 @@ async def get_active_in_progress_order(master_id: int):
             (master_id,),
         )
         return await cur.fetchone()
+
+
+_RELAYABLE_STATUSES = ("offered", "pricing", "offered_price", "in_progress")
+
+
+async def get_customer_active_order(customer_id: int):
+    """Mijozning hozir muzokara/bajarilish jarayonidagi buyurtmasi — anonim chat uchun."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        placeholders = ",".join("?" for _ in _RELAYABLE_STATUSES)
+        cur = await db.execute(
+            f"SELECT * FROM orders WHERE customer_id = ? AND status IN ({placeholders}) "
+            "ORDER BY id DESC LIMIT 1",
+            (customer_id, *_RELAYABLE_STATUSES),
+        )
+        return await cur.fetchone()
+
+
+async def get_master_active_order(master_id: int):
+    """Ustaning hozir muzokara/bajarilish jarayonidagi buyurtmasi — anonim chat uchun."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        placeholders = ",".join("?" for _ in _RELAYABLE_STATUSES)
+        cur = await db.execute(
+            f"SELECT * FROM orders WHERE master_id = ? AND status IN ({placeholders}) "
+            "ORDER BY id DESC LIMIT 1",
+            (master_id, *_RELAYABLE_STATUSES),
+        )
+        return await cur.fetchone()
+
+
+async def increment_warranty_claims(order_id: int):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE orders SET warranty_claims_count = warranty_claims_count + 1 WHERE id = ?",
+            (order_id,),
+        )
+        await db.commit()
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute("SELECT warranty_claims_count FROM orders WHERE id = ?", (order_id,))
+        row = await cur.fetchone()
+        return row["warranty_claims_count"] if row else None
 
 
 async def get_recent_orders(limit: int = 20):

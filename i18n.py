@@ -253,3 +253,12 @@ def service_example(service_type: str, lang: str = "uz") -> str:
     return SERVICE_EXAMPLES.get(lang, SERVICE_EXAMPLES["uz"]).get(
         service_type, SERVICE_EXAMPLES["uz"]["electric"]
     )
+
+
+def service_names_display(service_type_field: str, lang: str = "uz") -> str:
+    """Ustaning bir nechta xizmat turini ('electric,plumber' kabi vergul bilan
+    ajratilgan) o'qish uchun qulay ko'rinishda birlashtiradi."""
+    if not service_type_field:
+        return "—"
+    keys = [k.strip() for k in service_type_field.split(",") if k.strip()]
+    return " / ".join(service_name(k, lang) for k in keys)
