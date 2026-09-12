@@ -55,81 +55,93 @@ o'rnatish shart emas).
 
 `/admin` buyrug'i (yoki admin sifatida oddiy `/start`) tugmali panelni ochadi:
 
-- ⏳ Kutilayotgan ustalar — yangi arizalarni ko'rish va tasdiqlash/rad etish
+- ⏳ Kutilayotgan ustalar — arizalar, hujjatlar (pasport, sudlanmaganlik
+  ma'lumotnomasi, malaka hujjati) bilan birga, tasdiqlash/rad etish
 - 🛠 Barcha ustalar — holati, reytingi, balansi, yoshi, tajribasi bilan
 - 🙋 Barcha mijozlar
 - 🔴 Faol buyurtmalar — hozir kim qaysi ish bilan band
 - 📋 Buyurtmalar tarixi
+- 🛡 Sug'urta jamg'armasi — balans va harakatlar tarixi
 - ℹ️ Buyruqlar ro'yxati
 
 Matn buyruqlari ham ishlaydi: `/pending`, `/masters`, `/customers`, `/active`,
-`/orders [soni]`, `/addbalance <master_id> <summa>`, `/reply <telegram_id> <matn>`.
+`/orders [soni]`, `/addbalance <master_id> <summa>`, `/block <master_id>`,
+`/unblock <master_id>`, `/fund`, `/fund_payout <summa> <sabab>`,
+`/reply <telegram_id> <matn>`.
 
 ## Fayl tuzilishi
 
 ```
 usta-xizmati/
-├── main.py              # bot ishga tushirish, til tanlash, global xato handler
-├── config.py             # sozlamalar (token, admin, komissiya, narx oralig'i, karta)
+├── main.py              # bot ishga tushirish, til tanlash, referal, global xato handler
+├── config.py             # sozlamalar (token, admin, komissiya, narx, kafolat, jamg'arma)
 ├── i18n.py                # 3 tilli matnlar (uz/ru/en)
 ├── database.py             # SQLite bilan ishlash (CRUD, avtomatik migratsiya)
-├── utils.py                # masofa hisoblash, admin xabar yuborish, formatlash
+├── utils.py                # masofa/ETA hisoblash, admin xabar, formatlash
 ├── keyboards.py             # Telegram klaviaturalar (tilga mos)
 ├── states.py                 # FSM holatlari (suhbat bosqichlari)
 └── handlers/
-    ├── customer.py           # mijoz oqimi
-    ├── master.py              # usta oqimi, jonli joylashuv, narx tizimi
-    ├── admin.py                # admin panel
+    ├── customer.py           # mijoz oqimi, sharhlar, kafolat, narxlar, promo
+    ├── master.py              # usta oqimi, jonli joylashuv, hujjatlar, narx tizimi
+    ├── admin.py                # admin panel, sifat nazorati, sug'urta jamg'armasi
     ├── support.py               # qo'llab-quvvatlash oqimi
-    └── topup.py                  # balansni to'ldirish oqimi
+    ├── topup.py                  # balansni to'ldirish oqimi
+    └── relay.py                   # mijoz-usta o'rtasida anonim yozishma
 ```
 
 ## Ushbu yangilanishda qo'shilganlar
 
-1. **Kritik tuzatish**: mijoz buyurtma berish jarayonida lokatsiya yuborganda
-   ba'zi holatlarda bu xabar yo'qolib ketishi mumkin bo'lgan marshrutlash xatosi
-   butunlay bartaraf etildi; lokatsiya/telefon bosqichlarida noto'g'ri turdagi
-   xabar yuborilsa endi tushunarli eslatma chiqadi.
-2. **Buyurtma xavfsizligi**: mijozning aniq manzili (geolokatsiyasi) endi faqat
-   usta narxni taklif qilib, mijoz uni tasdiqlagandan SO'NG ustaga yuboriladi —
-   avval faqat masofa/ETA ko'rinadi. Mijozga ham ustaning ismi, rasmi va
-   telefoni bilan solishtirish bo'yicha xavfsizlik eslatmasi yuboriladi.
-3. **Sharhlar tizimi**: mijoz ustani yulduzcha bilan baholagandan so'ng ixtiyoriy
-   matnli sharh ham qoldirishi mumkin; bu sharhlar keyingi mijozlarga usta
-   tanlash ro'yxatida "📝 Sharhlarni ko'rish" tugmasi orqali ko'rinadi.
-4. **Sifat nazorati**: ustaning reytingi belgilangan chegaradan (config.py —
-   `LOW_RATING_THRESHOLD`) pastga tushsa, admin avtomatik ogohlantiriladi;
-   `/block` va `/unblock` buyruqlari orqali sifatsiz ustani vaqtincha
-   bloklash mumkin.
-5. **Geolokatsiya va ETA**: usta tanlash ro'yxatida endi masofa bilan birga
-   taxminiy yetib borish vaqti (daqiqada) ham ko'rsatiladi.
-6. **Kafolat**: har bir bajarilgan ish uchun `WARRANTY_DAYS` (standart: 5 kun)
-   muddatli kafolat beriladi; mijoz shu muddat ichida "⚠️" tugmasi orqali
-   muammoni admin va ustaga bevosita yetkazishi mumkin.
-7. **Rag'batlantirish**: mijoz `LOYALTY_MILESTONES`da belgilangan buyurtmalar
-   sonini (masalan, 3, 5, 10) yakunlagach, tabrik xabari oladi. Bu — hozircha
-   oddiy bildirishnoma darajasida; to'liq keshbek/chegirma-kod tizimi emas.
+**Xavfsizlik va ishonch:**
+1. Mijozning aniq manzili endi faqat narx tasdiqlangandan SO'NG ustaga yuboriladi
+2. **Telefon raqamlari butunlay yashiriladi** — mijoz va usta bir-birining
+   raqamini ko'rmaydi; o'zaro yozishish uchun botga oddiy xabar (matn/rasm/ovoz/video)
+   yozish kifoya — bot buni avtomatik boshqa tomonga, shaxsiy ma'lumotsiz, yetkazadi
+3. **Qat'iy verifikatsiya**: ro'yxatdan o'tishda endi pasport raqamidan tashqari,
+   sudlanmaganlik haqida ma'lumotnoma rasmi (majburiy) va malaka hujjati
+   (ixtiyoriy) so'raladi — bular admin panelida ko'rinadi, admin qo'lda tekshiradi
+4. **Ikki tomonlama reyting**: endi usta ham mijozni baholaydi, nafaqat aksincha
+5. **Sifat nazorati**: past reytingli usta `config.py`dagi sozlamaga qarab
+   avtomatik bloklanadi (yoki faqat ogohlantirish bilan cheklanadi);
+   `/block`, `/unblock` orqali qo'lda ham boshqarish mumkin
+6. **Kafolat**: har ish uchun kunlik kafolat, muammo takrorlansa kuchliroq
+   til bilan ustaga eslatiladi (bepul tuzatish talabi)
+7. **Sug'urta jamg'armasi**: har bir komissiyadan avtomatik ulush jamg'armaga
+   o'tadi, admin panelida shaffof ko'rinadi, zarar to'lovlari qayd etiladi
+
+**Biznes o'sishi:**
+8. **Referral tizimi**: har bir mijoz o'zining shaxsiy taklif havolasiga ega
+   ("🎁 Aksiya va Keshbek" bo'limida); do'sti birinchi buyurtmasini yakunlasa,
+   taklif qilgan mijozga bonus xabari yuboriladi
+9. **Ko'p xizmatli ustalar**: usta ro'yxatdan o'tishda bir nechta xizmat turini
+   (masalan, Elektrik + Santexnik) belgilashi mumkin
+10. **Yangi mijoz menyusi**: 💰 Narxlar, 📋 Mening buyurtmalarim, 🎁 Aksiya va
+    Keshbek, ⚙️ Sozlamalar (tilni o'zgartirish) bo'limlari qo'shildi
+11. **Geolokatsiya/ETA**: usta tanlashda masofa + taxminiy yetib borish vaqti
 
 ## Muhim — hozirgi cheklovlar (halol ro'yxat)
 
-1. **3 tillilik qisman**: foydalanuvchi tomonidagi asosiy oqimlar (til tanlash,
-   ro'yxatdan o'tish, buyurtma berish, menyular, tugmalar) to'liq tarjima qilingan.
-   Ammo usta-mijoz o'rtasidagi ba'zi orqa fon xabarlari va butun admin paneli
-   hozircha faqat o'zbek tilida.
-2. **Platformani "aylanib o'tish" xavfi**: birinchi buyurtmadan keyin mijoz va
-   usta bir-birining raqamini bilib qolishadi va nazariy jihatdan kelasi safar
-   botsiz to'g'ridan-to'g'ri kelishib olishlari mumkin. Bu — har qanday xizmat
-   platformasiga xos tanish muammo (masalan, Uber/Yandex ham buni to'liq
-   texnik yo'l bilan hal qila olmaydi). Kodning o'zi buni 100% oldini ololmaydi;
-   amalda yordam beradigan choralar: (a) sodiqlik dasturi — chegirma/imtiyoz
-   faqat bot orqali buyurtma berilganda ishlaydi, (b) ustalar bilan tuzilgan
-   shartnomada "aylanib o'tish" uchun jarima band, (c) reyting va kafolat faqat
-   bot orqali qilingan buyurtmalarga taalluqli ekanini urg'ulash.
-3. **Xavfsizlik**: pasport ma'lumotlari bazada shifrlanmagan holda saqlanadi
-4. **Bekor qilish siyosati**: usta yo'lga chiqqandan keyin bekor qilinsa nima
+1. **Verifikatsiya — bot avtomatik tekshira olmaydi**: sudlanmaganlik
+   ma'lumotnomasi va malaka hujjatining haqiqiyligini bot O'ZI tasdiqlay olmaydi
+   (bunday davlat bazasiga ochiq API mavjud emas). Bot faqat hujjat rasmini
+   yig'ib, admin panelida ko'rsatadi — yakuniy tekshiruv har doim ADMIN
+   tomonidan qo'lda amalga oshiriladi.
+2. **Anonim yozishma cheksiz emas**: bot telefon RAQAM MAYDONINI yashiradi,
+   lekin agar usta yoki mijoz xabar matnida o'z raqamini yozib qo'ysa (masalan
+   "menga +998... orqali qo'ng'iroq qiling"), buni bot avtomatik bloklamaydi.
+   Bu — istalgan shu turdagi platformaga (Uber, Yandex) xos umumiy cheklov.
+3. **Platformani "aylanib o'tish" xavfi**: to'liq bartaraf etilmagan, faqat
+   yumshatilgan (yashirin raqamlar + sodiqlik dasturi + kafolat faqat bot
+   orqali buyurtmalarga taalluqli).
+4. **3 tillilik qisman**: asosiy foydalanuvchi oqimlari to'liq tarjima
+   qilingan, lekin butun admin paneli va ba'zi tizim xabarlari o'zbek tilida.
+5. **Xavfsizlik**: pasport ma'lumotlari bazada shifrlanmagan holda saqlanadi
+6. **Bekor qilish siyosati**: usta yo'lga chiqqandan keyin bekor qilinsa nima
    bo'lishi (jarima va h.k.) hali belgilanmagan
-5. **SQLite → PostgreSQL**: foydalanuvchilar ko'paysa, PostgreSQL'ga o'tish
+7. **SQLite → PostgreSQL**: foydalanuvchilar ko'paysa, PostgreSQL'ga o'tish
    tavsiya etiladi
-6. **Testlar**: avtomatik testlar yozilmagan
-7. **Click/Payme integratsiyasi**: balans hozircha admin tomonidan qo'lda
+8. **Testlar**: avtomatik testlar yozilmagan
+9. **Click/Payme integratsiyasi**: balans hozircha admin tomonidan qo'lda
    tasdiqlanadi (skrinshot orqali)
+10. **Referral bonusi**: hozircha faqat bildirishnoma darajasida (matnli
+    e'lon) — avtomatik pul/chegirma-kod tizimi emas; buni amalga oshirish
+    uchun admin qo'lda chegirma berishi kerak

@@ -19,6 +19,10 @@ BTN_TOPUP_ALL = _all_langs("btn_topup")
 BTN_NEW_ORDER_ALL = _all_langs("btn_new_order")
 BTN_CANCEL_ALL = _all_langs("btn_cancel")
 BTN_SKIP_PHOTO_ALL = _all_langs("btn_skip_photo")
+BTN_PRICES_ALL = _all_langs("btn_prices")
+BTN_MY_ORDERS_ALL = _all_langs("btn_my_orders")
+BTN_PROMO_ALL = _all_langs("btn_promo")
+BTN_SETTINGS_ALL = _all_langs("btn_settings")
 
 # ---------- Standart (uz) qiymatlar — eski kod bilan moslik uchun ----------
 BTN_CUSTOMER = TEXTS["btn_customer"]["uz"]
@@ -58,6 +62,8 @@ def customer_menu_kb(lang="uz"):
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=t("btn_new_order", lang))],
+            [KeyboardButton(text=t("btn_my_orders", lang)), KeyboardButton(text=t("btn_prices", lang))],
+            [KeyboardButton(text=t("btn_promo", lang)), KeyboardButton(text=t("btn_settings", lang))],
             [KeyboardButton(text=t("btn_support", lang))],
         ],
         resize_keyboard=True,
@@ -88,6 +94,19 @@ def service_type_kb(prefix: str, lang="uz"):
         [InlineKeyboardButton(text=service_name(key, lang), callback_data=f"{prefix}:{key}")]
         for key in SERVICE_TYPES
     ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def service_multiselect_kb(selected: list, lang="uz"):
+    """Usta bir nechta xizmat turini tanlashi uchun — belgilangan tugmalarda ✅ ko'rinadi."""
+    buttons = []
+    for key in SERVICE_TYPES:
+        mark = "✅ " if key in selected else ""
+        buttons.append([InlineKeyboardButton(
+            text=f"{mark}{service_name(key, lang)}", callback_data=f"mast_toggle:{key}"
+        )])
+    done_labels = {"uz": "✅ Tasdiqlash", "ru": "✅ Подтвердить", "en": "✅ Confirm"}
+    buttons.append([InlineKeyboardButton(text=done_labels.get(lang, done_labels["uz"]), callback_data="mast_service_done")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -221,6 +240,7 @@ BTN_ADMIN_MASTERS = "🛠 Barcha ustalar"
 BTN_ADMIN_CUSTOMERS = "🙋 Barcha mijozlar"
 BTN_ADMIN_ACTIVE = "🔴 Faol buyurtmalar"
 BTN_ADMIN_ORDERS = "📋 Buyurtmalar tarixi"
+BTN_ADMIN_FUND = "🛡 Sug'urta jamg'armasi"
 BTN_ADMIN_HELP = "ℹ️ Buyruqlar ro'yxati"
 
 
@@ -230,6 +250,7 @@ def admin_menu_kb():
             [KeyboardButton(text=BTN_ADMIN_PENDING)],
             [KeyboardButton(text=BTN_ADMIN_MASTERS), KeyboardButton(text=BTN_ADMIN_CUSTOMERS)],
             [KeyboardButton(text=BTN_ADMIN_ACTIVE), KeyboardButton(text=BTN_ADMIN_ORDERS)],
+            [KeyboardButton(text=BTN_ADMIN_FUND)],
             [KeyboardButton(text=BTN_ADMIN_HELP)],
         ],
         resize_keyboard=True,

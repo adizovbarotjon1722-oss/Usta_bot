@@ -14,6 +14,8 @@ class MasterRegister(StatesGroup):
     entering_age = State()
     entering_experience = State()
     entering_passport = State()
+    sending_criminal_record = State()
+    sending_qualification = State()
     entering_phone = State()
     entering_extra_phone = State()
     choosing_service = State()

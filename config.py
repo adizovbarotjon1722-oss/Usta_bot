@@ -4,7 +4,7 @@ BOT_TOKEN va ADMIN_IDS ni o'zingiznikiga almashtiring.
 """
 
 # @BotFather dan olingan bot tokeni
-BOT_TOKEN = "8388516466:AAFGAfU1ynptbibATNZN5Qa5zmRno2lcbm0"
+BOT_TOKEN = "8388516466:AAGl306VZBbdetjJDl3JJMqZ0s7aziQv0Bo"
 
 # Admin(lar)ning Telegram user ID raqami (bir nechta bo'lishi mumkin)
 # ID ni bilish uchun @userinfobot ga yozing
@@ -55,8 +55,25 @@ WARRANTY_DAYS = 5
 LOW_RATING_THRESHOLD = 3.0
 LOW_RATING_MIN_COUNT = 3
 
+# True bo'lsa, yuqoridagi chegaradan past ustalar AVTOMATIK bloklanadi (yangi
+# buyurtma qabul qila olmaydi, admin /unblock bilan qaytarishi mumkin).
+# ESLATMA: bir nechta og'ir mijozning noxolis bahosi ham ustani bloklashi
+# mumkin — shuning uchun False qilib, faqat ogohlantirish bilan cheklanish
+# ham oqilona variant.
+AUTO_BLOCK_ON_LOW_RATING = True
+
 # Rag'batlantirish: mijoz shuncha buyurtmani yakunlagach tabriklanadi
 LOYALTY_MILESTONES = [3, 5, 10, 20]
+
+# Sug'urta jamg'armasi: platforma komissiyasining shuncha ulushi (masalan 0.10 = 10%)
+# ustaning balansidan EMAS, balki platformaning o'z komissiyasidan jamg'armaga
+# ajratiladi — usta uchun qo'shimcha xarajat emas.
+INSURANCE_FUND_RATE = 0.10
+
+# Referral: do'stini taklif qilgan mijoz, taklif qilingan kishi birinchi
+# buyurtmasini yakunlagach ushbu matnli bonusni oladi (hozircha avtomatik pul
+# emas — admin qo'lda his-sanoat sifatida amalga oshiradi, masalan chegirma).
+REFERRAL_BONUS_NOTE = "Keyingi buyurtmangizda 10% chegirma"
 
 # Ma'lumotlar bazasi fayli
 DB_PATH = "usta_xizmati.db"

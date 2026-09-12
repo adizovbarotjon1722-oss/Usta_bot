@@ -15,7 +15,7 @@ from database import init_db
 import keyboards as kb
 from i18n import t
 from states import Onboarding
-from handlers import customer, master, admin, support, topup
+from handlers import customer, master, admin, support, topup, relay
 from utils import notify_admins
 
 logging.basicConfig(level=logging.INFO)
@@ -55,7 +55,18 @@ async def cmd_start(message: Message, state: FSMContext):
         await message.answer(t("customer_menu_welcome", lang), reply_markup=kb.customer_menu_kb(lang))
         return
 
-    # Yangi foydalanuvchi — avval tilni tanlatamiz
+    # Yangi foydalanuvchi — referal havola orqali kelgan bo'lsa, saqlab qo'yamiz
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) == 2 and parts[1].startswith("ref_"):
+        try:
+            referrer_id = int(parts[1].removeprefix("ref_"))
+            referrer = await db.get_customer_by_id(referrer_id)
+            if referrer and referrer["telegram_id"] != message.from_user.id:
+                await state.update_data(referred_by=referrer_id)
+        except ValueError:
+            pass
+
+    # Avval tilni tanlatamiz
     await state.set_state(Onboarding.choosing_language)
     await message.answer(t("choose_language"), reply_markup=kb.language_choice_kb())
 
@@ -64,14 +75,30 @@ async def language_selected(callback: CallbackQuery, state: FSMContext):
     lang = callback.data.split(":")[1]
     if lang not in ("uz", "ru", "en"):
         lang = "uz"
-    await state.update_data(lang=lang)
-    await state.set_state(None)
 
     try:
         await callback.message.edit_reply_markup(reply_markup=None)
     except Exception:
         pass
 
+    # Mavjud foydalanuvchi tilni Sozlamalar orqali o'zgartirsa — to'g'ridan-to'g'ri yangilaymiz
+    master_row = await db.get_master(callback.from_user.id)
+    if master_row:
+        await db.update_master(callback.from_user.id, language=lang)
+        await callback.message.answer(t("master_menu_welcome", lang), reply_markup=kb.master_menu_kb(lang))
+        await callback.answer()
+        return
+
+    customer_row = await db.get_customer(callback.from_user.id)
+    if customer_row:
+        await db.update_customer(callback.from_user.id, language=lang)
+        await callback.message.answer(t("customer_menu_welcome", lang), reply_markup=kb.customer_menu_kb(lang))
+        await callback.answer()
+        return
+
+    # Yangi foydalanuvchi — hali roli tanlanmagan
+    await state.update_data(lang=lang)
+    await state.set_state(None)
     await callback.message.answer(t("welcome", lang), reply_markup=kb.role_choice_kb(lang))
     await callback.answer()
 
@@ -96,6 +123,7 @@ async def cmd_help(message: Message):
             "/addbalance &lt;master_id&gt; &lt;summa&gt; — balans to'ldirish\n"
             "/block &lt;master_id&gt; — ustani bloklash\n"
             "/unblock &lt;master_id&gt; — blokdan chiqarish\n"
+            "/fund — sug'urta jamg'armasi\n"
             "/reply &lt;telegram_id&gt; &lt;matn&gt; — qo'llab-quvvatlashga javob\n"
             "/admin — admin panelni ochish"
         )
@@ -125,6 +153,7 @@ async def main():
     dp.include_router(master.router)
     dp.include_router(topup.router)
     dp.include_router(customer.router)
+    dp.include_router(relay.router)
 
     @dp.error()
     async def global_error_handler(event: ErrorEvent):

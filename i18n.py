@@ -70,6 +70,10 @@ TEXTS = {
     "btn_topup": {"uz": "💳 Balansni to'ldirish", "ru": "💳 Пополнить баланс", "en": "💳 Top up balance"},
     "btn_new_order": {"uz": "🆕 Yangi buyurtma", "ru": "🆕 Новый заказ", "en": "🆕 New order"},
     "btn_cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена", "en": "❌ Cancel"},
+    "btn_prices": {"uz": "💰 Narxlar", "ru": "💰 Цены", "en": "💰 Prices"},
+    "btn_my_orders": {"uz": "📋 Mening buyurtmalarim", "ru": "📋 Мои заказы", "en": "📋 My orders"},
+    "btn_promo": {"uz": "🎁 Aksiya va Keshbek", "ru": "🎁 Акции и Кешбэк", "en": "🎁 Promo & Cashback"},
+    "btn_settings": {"uz": "⚙️ Sozlamalar", "ru": "⚙️ Настройки", "en": "⚙️ Settings"},
     "btn_send_phone": {"uz": "📱 Raqamni yuborish", "ru": "📱 Отправить номер", "en": "📱 Send phone number"},
     "btn_send_location": {"uz": "📍 Joylashuvni yuborish", "ru": "📍 Отправить геолокацию", "en": "📍 Send location"},
     "btn_skip_photo": {"uz": "⏭ O'tkazib yuborish", "ru": "⏭ Пропустить", "en": "⏭ Skip"},
@@ -253,3 +257,12 @@ def service_example(service_type: str, lang: str = "uz") -> str:
     return SERVICE_EXAMPLES.get(lang, SERVICE_EXAMPLES["uz"]).get(
         service_type, SERVICE_EXAMPLES["uz"]["electric"]
     )
+
+
+def service_names_display(service_type_field: str, lang: str = "uz") -> str:
+    """Ustaning bir nechta xizmat turini ('electric,plumber' kabi vergul bilan
+    ajratilgan) o'qish uchun qulay ko'rinishda birlashtiradi."""
+    if not service_type_field:
+        return "—"
+    keys = [k.strip() for k in service_type_field.split(",") if k.strip()]
+    return " / ".join(service_name(k, lang) for k in keys)
