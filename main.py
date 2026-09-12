@@ -94,6 +94,8 @@ async def cmd_help(message: Message):
             "/active — hozir faol buyurtmalar (ustalar qanday ish bilan band)\n"
             "/orders [soni] — buyurtmalar tarixi\n"
             "/addbalance &lt;master_id&gt; &lt;summa&gt; — balans to'ldirish\n"
+            "/block &lt;master_id&gt; — ustani bloklash\n"
+            "/unblock &lt;master_id&gt; — blokdan chiqarish\n"
             "/reply &lt;telegram_id&gt; &lt;matn&gt; — qo'llab-quvvatlashga javob\n"
             "/admin — admin panelni ochish"
         )

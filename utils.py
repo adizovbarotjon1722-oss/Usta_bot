@@ -15,6 +15,15 @@ def haversine_km(lat1, lon1, lat2, lon2) -> float:
     return R * c
 
 
+def estimate_eta_minutes(distance_km: float) -> int:
+    """Masofaga qarab taxminiy yetib borish vaqtini (daqiqada) hisoblaydi."""
+    from config import AVERAGE_SPEED_KMH
+    if distance_km is None or distance_km == float("inf"):
+        return None
+    minutes = (distance_km / AVERAGE_SPEED_KMH) * 60
+    return max(1, round(minutes))
+
+
 def sort_masters_by_distance_and_rating(masters, cust_lat, cust_lon):
     """
     Ustalarni masofa (asosiy) va reyting (teng masofada bo'lsa) bo'yicha saralaydi.

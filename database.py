@@ -109,6 +109,8 @@ async def init_db():
         await _add_column_if_missing(db, "masters", "extra_phone TEXT")
         await _add_column_if_missing(db, "masters", "language TEXT DEFAULT 'uz'")
         await _add_column_if_missing(db, "customers", "language TEXT DEFAULT 'uz'")
+        await _add_column_if_missing(db, "orders", "warranty_until TEXT")
+        await _add_column_if_missing(db, "customers", "completed_orders INTEGER DEFAULT 0")
 
         await db.commit()
 
@@ -212,13 +214,46 @@ async def add_master_rating(master_id: int, stars: int):
         cur = await db.execute("SELECT rating, rating_count FROM masters WHERE id = ?", (master_id,))
         row = await cur.fetchone()
         if not row:
-            return
+            return None
         new_count = row["rating_count"] + 1
         new_rating = (row["rating"] * row["rating_count"] + stars) / new_count
+        new_rating = round(new_rating, 2)
         await db.execute(
             "UPDATE masters SET rating = ?, rating_count = ? WHERE id = ?",
-            (round(new_rating, 2), new_count, master_id),
+            (new_rating, new_count, master_id),
         )
+        await db.commit()
+        return {"rating": new_rating, "rating_count": new_count}
+
+
+async def create_review(order_id: int, from_role: str, stars: int, comment: str = None):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "INSERT INTO reviews (order_id, from_role, stars, comment, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (order_id, from_role, stars, comment, now()),
+        )
+        await db.commit()
+
+
+async def get_master_reviews(master_id: int, limit: int = 3):
+    """Ustaning eng so'nggi sharhlari (buyurtmalar orqali bog'langan)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            """SELECT reviews.stars, reviews.comment, reviews.created_at
+               FROM reviews
+               JOIN orders ON orders.id = reviews.order_id
+               WHERE orders.master_id = ? AND reviews.from_role = 'master'
+               ORDER BY reviews.id DESC LIMIT ?""",
+            (master_id, limit),
+        )
+        return await cur.fetchall()
+
+
+async def set_master_status(master_id: int, status: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE masters SET status = ? WHERE id = ?", (status, master_id))
         await db.commit()
 
 
@@ -263,6 +298,20 @@ async def get_all_customers():
         db.row_factory = aiosqlite.Row
         cur = await db.execute("SELECT * FROM customers ORDER BY id DESC")
         return await cur.fetchall()
+
+
+async def increment_customer_completed_orders(customer_id: int):
+    """Mijozning yakunlangan buyurtmalar sonini oshiradi va yangi qiymatni qaytaradi."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE customers SET completed_orders = completed_orders + 1 WHERE id = ?",
+            (customer_id,),
+        )
+        await db.commit()
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute("SELECT completed_orders FROM customers WHERE id = ?", (customer_id,))
+        row = await cur.fetchone()
+        return row["completed_orders"] if row else None
 
 
 # ---------- ORDERS ----------

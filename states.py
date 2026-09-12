@@ -25,6 +25,14 @@ class Onboarding(StatesGroup):
     choosing_language = State()
 
 
+class ReviewComment(StatesGroup):
+    entering_comment = State()
+
+
+class WarrantyClaim(StatesGroup):
+    entering_issue = State()
+
+
 class MasterPricing(StatesGroup):
     entering_price = State()
     confirming_low_price = State()

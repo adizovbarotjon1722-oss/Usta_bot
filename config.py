@@ -14,7 +14,7 @@ ADMIN_IDS = [1047268578]
 COMMISSION_RATE = 0.10
 
 # Usta ro'yxatdan o'tgandan so'ng komissiyasiz bajara oladigan buyurtmalar soni
-FREE_ORDERS_COUNT = 1
+FREE_ORDERS_COUNT = 2
 
 # Balansni to'ldirish uchun admin/kompaniya kartasi ma'lumotlari
 # (usta pul o'tkazishi uchun ustaga ko'rsatiladi)
@@ -42,7 +42,21 @@ PRICE_RANGES = {
 LOW_PRICE_WARNING_RATIO = 0.5
 
 # Ustalarni mijozga ko'rsatishda qidiriladigan maksimal radius (km)
-SEARCH_RADIUS_KM = 5
+SEARCH_RADIUS_KM = 15
+
+# Yetib borish vaqtini taxminiy hisoblash uchun o'rtacha shahar ichi tezlik (km/soat)
+AVERAGE_SPEED_KMH = 25
+
+# Bajarilgan ish uchun kafolat muddati (kun)
+WARRANTY_DAYS = 5
+
+# Sifat nazorati: reyting shu chegaradan past bo'lsa (kamida shuncha baho bilan),
+# admin avtomatik ogohlantiriladi
+LOW_RATING_THRESHOLD = 3.0
+LOW_RATING_MIN_COUNT = 3
+
+# Rag'batlantirish: mijoz shuncha buyurtmani yakunlagach tabriklanadi
+LOYALTY_MILESTONES = [3, 5, 10, 20]
 
 # Ma'lumotlar bazasi fayli
 DB_PATH = "usta_xizmati.db"

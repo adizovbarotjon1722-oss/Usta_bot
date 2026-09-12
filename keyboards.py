@@ -127,10 +127,14 @@ def remove_kb():
 
 def masters_list_kb(enriched_masters):
     """enriched_masters: [(master_row, distance_km), ...]"""
+    from utils import estimate_eta_minutes
     buttons = []
     for m, dist in enriched_masters:
-        text = f"👤 {m['full_name']} | 📍{dist:.1f} km | ⭐{m['rating']:.1f}"
+        eta = estimate_eta_minutes(dist)
+        eta_text = f" | ⏱~{eta} daq" if eta else ""
+        text = f"👤 {m['full_name']} | 📍{dist:.1f} km{eta_text} | ⭐{m['rating']:.1f}"
         buttons.append([InlineKeyboardButton(text=text, callback_data=f"pick_master:{m['id']}")])
+        buttons.append([InlineKeyboardButton(text="📝 Sharhlarni ko'rish", callback_data=f"view_reviews:{m['id']}")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -165,11 +169,22 @@ def order_finish_kb(order_id: int):
     ])
 
 
+def skip_comment_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="⏭ O'tkazib yuborish")]],
+        resize_keyboard=True,
+    )
+
+
 def rating_kb(order_id: int, role: str):
     buttons = [
         [InlineKeyboardButton(text="⭐" * i, callback_data=f"rate:{role}:{order_id}:{i}") for i in range(1, 4)],
         [InlineKeyboardButton(text="⭐" * i, callback_data=f"rate:{role}:{order_id}:{i}") for i in range(4, 6)],
     ]
+    if role == "master":
+        buttons.append(
+            [InlineKeyboardButton(text="⚠️ Ish sifatidan norozi bo'lsam", callback_data=f"warranty_claim:{order_id}")]
+        )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

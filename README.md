@@ -84,20 +84,52 @@ usta-xizmati/
     └── topup.py                  # balansni to'ldirish oqimi
 ```
 
+## Ushbu yangilanishda qo'shilganlar
+
+1. **Kritik tuzatish**: mijoz buyurtma berish jarayonida lokatsiya yuborganda
+   ba'zi holatlarda bu xabar yo'qolib ketishi mumkin bo'lgan marshrutlash xatosi
+   butunlay bartaraf etildi; lokatsiya/telefon bosqichlarida noto'g'ri turdagi
+   xabar yuborilsa endi tushunarli eslatma chiqadi.
+2. **Buyurtma xavfsizligi**: mijozning aniq manzili (geolokatsiyasi) endi faqat
+   usta narxni taklif qilib, mijoz uni tasdiqlagandan SO'NG ustaga yuboriladi —
+   avval faqat masofa/ETA ko'rinadi. Mijozga ham ustaning ismi, rasmi va
+   telefoni bilan solishtirish bo'yicha xavfsizlik eslatmasi yuboriladi.
+3. **Sharhlar tizimi**: mijoz ustani yulduzcha bilan baholagandan so'ng ixtiyoriy
+   matnli sharh ham qoldirishi mumkin; bu sharhlar keyingi mijozlarga usta
+   tanlash ro'yxatida "📝 Sharhlarni ko'rish" tugmasi orqali ko'rinadi.
+4. **Sifat nazorati**: ustaning reytingi belgilangan chegaradan (config.py —
+   `LOW_RATING_THRESHOLD`) pastga tushsa, admin avtomatik ogohlantiriladi;
+   `/block` va `/unblock` buyruqlari orqali sifatsiz ustani vaqtincha
+   bloklash mumkin.
+5. **Geolokatsiya va ETA**: usta tanlash ro'yxatida endi masofa bilan birga
+   taxminiy yetib borish vaqti (daqiqada) ham ko'rsatiladi.
+6. **Kafolat**: har bir bajarilgan ish uchun `WARRANTY_DAYS` (standart: 5 kun)
+   muddatli kafolat beriladi; mijoz shu muddat ichida "⚠️" tugmasi orqali
+   muammoni admin va ustaga bevosita yetkazishi mumkin.
+7. **Rag'batlantirish**: mijoz `LOYALTY_MILESTONES`da belgilangan buyurtmalar
+   sonini (masalan, 3, 5, 10) yakunlagach, tabrik xabari oladi. Bu — hozircha
+   oddiy bildirishnoma darajasida; to'liq keshbek/chegirma-kod tizimi emas.
+
 ## Muhim — hozirgi cheklovlar (halol ro'yxat)
 
 1. **3 tillilik qisman**: foydalanuvchi tomonidagi asosiy oqimlar (til tanlash,
    ro'yxatdan o'tish, buyurtma berish, menyular, tugmalar) to'liq tarjima qilingan.
-   Ammo usta-mijoz o'rtasidagi ba'zi orqa fon xabarlari (narx taklifi matni,
-   komissiya eslatmalari, "buyurtma bajarildi" kabi tizim xabarlari) va butun
-   admin paneli hozircha faqat o'zbek tilida. Buni to'liq tarjima qilish katta
-   qo'shimcha ish talab qiladi.
-2. **Xavfsizlik**: pasport ma'lumotlari bazada shifrlanmagan holda saqlanadi
-3. **Mijozni baholash**: hozir faqat usta baholanadi, mijozni ham baholash yo'q
+   Ammo usta-mijoz o'rtasidagi ba'zi orqa fon xabarlari va butun admin paneli
+   hozircha faqat o'zbek tilida.
+2. **Platformani "aylanib o'tish" xavfi**: birinchi buyurtmadan keyin mijoz va
+   usta bir-birining raqamini bilib qolishadi va nazariy jihatdan kelasi safar
+   botsiz to'g'ridan-to'g'ri kelishib olishlari mumkin. Bu — har qanday xizmat
+   platformasiga xos tanish muammo (masalan, Uber/Yandex ham buni to'liq
+   texnik yo'l bilan hal qila olmaydi). Kodning o'zi buni 100% oldini ololmaydi;
+   amalda yordam beradigan choralar: (a) sodiqlik dasturi — chegirma/imtiyoz
+   faqat bot orqali buyurtma berilganda ishlaydi, (b) ustalar bilan tuzilgan
+   shartnomada "aylanib o'tish" uchun jarima band, (c) reyting va kafolat faqat
+   bot orqali qilingan buyurtmalarga taalluqli ekanini urg'ulash.
+3. **Xavfsizlik**: pasport ma'lumotlari bazada shifrlanmagan holda saqlanadi
 4. **Bekor qilish siyosati**: usta yo'lga chiqqandan keyin bekor qilinsa nima
-   bo'lishi (jarima va h.k.) belgilanmagan
-5. **SQLite → PostgreSQL**: foydalanuvchilar ko'paysa, PostgreSQL'ga o'tish tavsiya
-   etiladi
+   bo'lishi (jarima va h.k.) hali belgilanmagan
+5. **SQLite → PostgreSQL**: foydalanuvchilar ko'paysa, PostgreSQL'ga o'tish
+   tavsiya etiladi
 6. **Testlar**: avtomatik testlar yozilmagan
 7. **Click/Payme integratsiyasi**: balans hozircha admin tomonidan qo'lda
    tasdiqlanadi (skrinshot orqali)
