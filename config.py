@@ -18,8 +18,8 @@ FREE_ORDERS_COUNT = 2
 
 # Balansni to'ldirish uchun admin/kompaniya kartasi ma'lumotlari
 # (usta pul o'tkazishi uchun ustaga ko'rsatiladi)
-ADMIN_CARD_NUMBER = "9860 3501 4575 6861"
-ADMIN_CARD_HOLDER = "Adizov Barotjon"
+ADMIN_CARD_NUMBER = "8600 0000 0000 0000"
+ADMIN_CARD_HOLDER = "F.I.SH."
 
 # Xizmat turlari
 SERVICE_TYPES = {

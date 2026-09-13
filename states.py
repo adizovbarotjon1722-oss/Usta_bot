@@ -5,6 +5,7 @@ class CustomerOrder(StatesGroup):
     choosing_service = State()
     entering_description = State()
     sending_location = State()
+    entering_address_text = State()
     sending_phone = State()
     choosing_master = State()
 
@@ -48,5 +49,16 @@ class SupportMessage(StatesGroup):
     entering_message = State()
 
 
-class AdminReply(StatesGroup):
-    entering_reply = State()
+class AdminActions(StatesGroup):
+    entering_reply_target = State()
+    entering_reply_text = State()
+    entering_balance_master_id = State()
+    entering_balance_amount = State()
+    entering_block_master_id = State()
+    entering_unblock_master_id = State()
+    entering_fund_payout_amount = State()
+    entering_fund_payout_reason = State()
+    entering_block_customer_id = State()
+    entering_unblock_customer_id = State()
+    choosing_broadcast_target = State()
+    entering_broadcast_text = State()

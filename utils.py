@@ -86,7 +86,8 @@ def format_master_line(m) -> str:
 
 
 def format_customer_line(c) -> str:
+    status = "🚫 Bloklangan" if c["blocked"] else "✅ Faol"
     return (
         f"#{c['id']} | {c['full_name'] or '(ism kiritilmagan)'} | "
-        f"{c['phone'] or '(telefon yo`q)'} | ⭐{c['rating']:.1f}"
+        f"{c['phone'] or '(telefon yo`q)'} | ⭐{c['rating']:.1f} | {status}"
     )

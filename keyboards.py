@@ -16,6 +16,7 @@ BTN_BALANCE_ALL = _all_langs("btn_balance")
 BTN_PROFILE_ALL = _all_langs("btn_profile")
 BTN_TOGGLE_BUSY_ALL = _all_langs("btn_toggle_busy")
 BTN_TOPUP_ALL = _all_langs("btn_topup")
+BTN_STATS_ALL = _all_langs("btn_stats")
 BTN_NEW_ORDER_ALL = _all_langs("btn_new_order")
 BTN_CANCEL_ALL = _all_langs("btn_cancel")
 BTN_SKIP_PHOTO_ALL = _all_langs("btn_skip_photo")
@@ -23,6 +24,7 @@ BTN_PRICES_ALL = _all_langs("btn_prices")
 BTN_MY_ORDERS_ALL = _all_langs("btn_my_orders")
 BTN_PROMO_ALL = _all_langs("btn_promo")
 BTN_SETTINGS_ALL = _all_langs("btn_settings")
+BTN_TYPE_ADDRESS_ALL = _all_langs("btn_type_address")
 
 # ---------- Standart (uz) qiymatlar — eski kod bilan moslik uchun ----------
 BTN_CUSTOMER = TEXTS["btn_customer"]["uz"]
@@ -75,6 +77,7 @@ def master_menu_kb(lang="uz"):
         keyboard=[
             [KeyboardButton(text=t("btn_profile", lang)), KeyboardButton(text=t("btn_balance", lang))],
             [KeyboardButton(text=t("btn_toggle_busy", lang)), KeyboardButton(text=t("btn_topup", lang))],
+            [KeyboardButton(text=t("btn_stats", lang))],
             [KeyboardButton(text=t("btn_support", lang))],
         ],
         resize_keyboard=True,
@@ -124,6 +127,7 @@ def location_request_kb(lang="uz"):
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=t("btn_send_location", lang), request_location=True)],
+            [KeyboardButton(text=t("btn_type_address", lang))],
             [KeyboardButton(text=t("btn_cancel", lang))],
         ],
         resize_keyboard=True,
@@ -149,9 +153,13 @@ def masters_list_kb(enriched_masters):
     from utils import estimate_eta_minutes
     buttons = []
     for m, dist in enriched_masters:
-        eta = estimate_eta_minutes(dist)
-        eta_text = f" | ⏱~{eta} daq" if eta else ""
-        text = f"👤 {m['full_name']} | 📍{dist:.1f} km{eta_text} | ⭐{m['rating']:.1f}"
+        if dist == float("inf"):
+            dist_text = "📍 masofa noma'lum"
+        else:
+            eta = estimate_eta_minutes(dist)
+            eta_text = f" | ⏱~{eta} daq" if eta else ""
+            dist_text = f"📍{dist:.1f} km{eta_text}"
+        text = f"👤 {m['full_name']} | {dist_text} | ⭐{m['rating']:.1f}"
         buttons.append([InlineKeyboardButton(text=text, callback_data=f"pick_master:{m['id']}")])
         buttons.append([InlineKeyboardButton(text="📝 Sharhlarni ko'rish", callback_data=f"view_reviews:{m['id']}")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -241,17 +249,51 @@ BTN_ADMIN_CUSTOMERS = "🙋 Barcha mijozlar"
 BTN_ADMIN_ACTIVE = "🔴 Faol buyurtmalar"
 BTN_ADMIN_ORDERS = "📋 Buyurtmalar tarixi"
 BTN_ADMIN_FUND = "🛡 Sug'urta jamg'armasi"
+BTN_ADMIN_ADD_BALANCE = "💰 Balans qo'shish"
+BTN_ADMIN_BLOCK = "🚫 Ustani bloklash"
+BTN_ADMIN_UNBLOCK = "🔓 Blokdan chiqarish"
+BTN_ADMIN_BLOCK_CUSTOMER = "🚫 Mijozni bloklash"
+BTN_ADMIN_UNBLOCK_CUSTOMER = "🔓 Mijozni blokdan chiqarish"
+BTN_ADMIN_REPLY = "💬 Foydalanuvchiga javob"
+BTN_ADMIN_FUND_PAYOUT = "➖ Jamg'aradan to'lov"
+BTN_ADMIN_STATS = "📊 Statistika"
+BTN_ADMIN_BROADCAST = "📢 Ommaviy xabar"
+BTN_ADMIN_AUDIT = "🧾 Admin harakatlari"
 BTN_ADMIN_HELP = "ℹ️ Buyruqlar ro'yxati"
+BTN_ADMIN_CANCEL = "❌ Bekor qilish"
 
 
 def admin_menu_kb():
     return ReplyKeyboardMarkup(
         keyboard=[
+            [KeyboardButton(text=BTN_ADMIN_STATS)],
             [KeyboardButton(text=BTN_ADMIN_PENDING)],
             [KeyboardButton(text=BTN_ADMIN_MASTERS), KeyboardButton(text=BTN_ADMIN_CUSTOMERS)],
             [KeyboardButton(text=BTN_ADMIN_ACTIVE), KeyboardButton(text=BTN_ADMIN_ORDERS)],
-            [KeyboardButton(text=BTN_ADMIN_FUND)],
+            [KeyboardButton(text=BTN_ADMIN_ADD_BALANCE), KeyboardButton(text=BTN_ADMIN_REPLY)],
+            [KeyboardButton(text=BTN_ADMIN_BLOCK), KeyboardButton(text=BTN_ADMIN_UNBLOCK)],
+            [KeyboardButton(text=BTN_ADMIN_BLOCK_CUSTOMER), KeyboardButton(text=BTN_ADMIN_UNBLOCK_CUSTOMER)],
+            [KeyboardButton(text=BTN_ADMIN_FUND), KeyboardButton(text=BTN_ADMIN_FUND_PAYOUT)],
+            [KeyboardButton(text=BTN_ADMIN_BROADCAST), KeyboardButton(text=BTN_ADMIN_AUDIT)],
             [KeyboardButton(text=BTN_ADMIN_HELP)],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def admin_cancel_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=BTN_ADMIN_CANCEL)]],
+        resize_keyboard=True,
+    )
+
+
+def broadcast_target_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🛠 Barcha ustalarga")],
+            [KeyboardButton(text="🙋 Barcha mijozlarga")],
+            [KeyboardButton(text=BTN_ADMIN_CANCEL)],
         ],
         resize_keyboard=True,
     )

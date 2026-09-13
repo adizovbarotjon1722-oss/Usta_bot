@@ -107,6 +107,15 @@ async def init_db():
                 created_at TEXT
             )
         """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS audit_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                admin_telegram_id INTEGER,
+                action TEXT,
+                details TEXT,
+                created_at TEXT
+            )
+        """)
 
         # Eski bazalarda yo'q bo'lishi mumkin bo'lgan ustunlarni xavfsiz qo'shish
         await _add_column_if_missing(db, "masters", "photo_file_id TEXT")
@@ -125,6 +134,7 @@ async def init_db():
         await _add_column_if_missing(db, "orders", "warranty_claims_count INTEGER DEFAULT 0")
         await _add_column_if_missing(db, "customers", "referred_by INTEGER")
         await _add_column_if_missing(db, "customers", "referral_bonus_given INTEGER DEFAULT 0")
+        await _add_column_if_missing(db, "customers", "blocked INTEGER DEFAULT 0")
         await _add_column_if_missing(db, "orders", "description_photo TEXT")
 
         await db.commit()
@@ -172,6 +182,26 @@ async def get_master(telegram_id: int):
         db.row_factory = aiosqlite.Row
         cur = await db.execute("SELECT * FROM masters WHERE telegram_id = ?", (telegram_id,))
         return await cur.fetchone()
+
+
+async def get_master_stats(master_id: int):
+    """Usta uchun statistika: bajarilgan ishlar soni va jami ishlangan summa (komissiyadan keyin)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cur = await db.execute(
+            "SELECT COUNT(*), COALESCE(SUM(price - COALESCE(commission, 0)), 0) "
+            "FROM orders WHERE master_id = ? AND status = 'done'",
+            (master_id,),
+        )
+        row = await cur.fetchone()
+        return {"completed_count": row[0], "total_earned": row[1]}
+
+
+async def set_customer_blocked(customer_id: int, blocked: bool):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE customers SET blocked = ? WHERE id = ?", (1 if blocked else 0, customer_id)
+        )
+        await db.commit()
 
 
 async def get_master_by_id(master_id: int):
@@ -570,3 +600,99 @@ async def get_insurance_fund_recent(limit: int = 15):
             "SELECT * FROM insurance_fund_ledger ORDER BY id DESC LIMIT ?", (limit,)
         )
         return await cur.fetchall()
+
+
+# ---------- AUDIT LOG (admin harakatlari jurnali) ----------
+
+async def log_admin_action(admin_telegram_id: int, action: str, details: str = None):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "INSERT INTO audit_log (admin_telegram_id, action, details, created_at) VALUES (?, ?, ?, ?)",
+            (admin_telegram_id, action, details, now()),
+        )
+        await db.commit()
+
+
+async def get_recent_audit_log(limit: int = 20):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,))
+        return await cur.fetchall()
+
+
+# ---------- STATISTIKA (admin dashboard uchun) ----------
+
+async def get_platform_stats():
+    """Admin uchun umumiy biznes ko'rsatkichlari."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM masters WHERE status='verified'")
+        verified_masters = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM masters WHERE status='pending'")
+        pending_masters = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM masters WHERE status='blocked'")
+        blocked_masters = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM customers")
+        total_customers = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM orders")
+        total_orders = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COUNT(*) as c FROM orders WHERE status='done'")
+        done_orders = (await cur.fetchone())["c"]
+
+        cur = await db.execute("SELECT COALESCE(SUM(commission), 0) as s FROM orders WHERE status='done'")
+        total_commission = (await cur.fetchone())["s"]
+
+        cur = await db.execute("SELECT COALESCE(SUM(price), 0) as s FROM orders WHERE status='done'")
+        total_turnover = (await cur.fetchone())["s"]
+
+        cur = await db.execute("SELECT COALESCE(AVG(rating), 0) as a FROM masters WHERE rating_count > 0")
+        avg_master_rating = (await cur.fetchone())["a"]
+
+        fund_balance = await get_insurance_fund_balance()
+
+        return {
+            "verified_masters": verified_masters,
+            "pending_masters": pending_masters,
+            "blocked_masters": blocked_masters,
+            "total_customers": total_customers,
+            "total_orders": total_orders,
+            "done_orders": done_orders,
+            "total_commission": total_commission,
+            "total_turnover": total_turnover,
+            "avg_master_rating": avg_master_rating,
+            "fund_balance": fund_balance,
+        }
+
+
+async def get_all_verified_master_telegram_ids():
+    async with aiosqlite.connect(DB_PATH) as db:
+        cur = await db.execute("SELECT telegram_id FROM masters WHERE status='verified'")
+        rows = await cur.fetchall()
+        return [r[0] for r in rows]
+
+
+async def get_all_customer_telegram_ids():
+    async with aiosqlite.connect(DB_PATH) as db:
+        cur = await db.execute("SELECT telegram_id FROM customers")
+        rows = await cur.fetchall()
+        return [r[0] for r in rows]
+
+
+async def get_master_today_stats(master_id: int):
+    """Ustaning bugungi ish statistikasi."""
+    from datetime import datetime as _dt
+    today_start = _dt.utcnow().strftime("%Y-%m-%d")
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cur = await db.execute(
+            "SELECT COUNT(*) as cnt, COALESCE(SUM(price), 0) as total, COALESCE(SUM(commission), 0) as comm "
+            "FROM orders WHERE master_id = ? AND status = 'done' AND created_at >= ?",
+            (master_id, today_start),
+        )
+        return await cur.fetchone()

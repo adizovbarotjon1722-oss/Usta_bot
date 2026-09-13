@@ -68,6 +68,7 @@ TEXTS = {
     "btn_profile": {"uz": "👤 Profilim", "ru": "👤 Мой профиль", "en": "👤 My profile"},
     "btn_toggle_busy": {"uz": "🔄 Holatni almashtirish", "ru": "🔄 Сменить статус", "en": "🔄 Toggle status"},
     "btn_topup": {"uz": "💳 Balansni to'ldirish", "ru": "💳 Пополнить баланс", "en": "💳 Top up balance"},
+    "btn_stats": {"uz": "📊 Statistikam", "ru": "📊 Моя статистика", "en": "📊 My stats"},
     "btn_new_order": {"uz": "🆕 Yangi buyurtma", "ru": "🆕 Новый заказ", "en": "🆕 New order"},
     "btn_cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена", "en": "❌ Cancel"},
     "btn_prices": {"uz": "💰 Narxlar", "ru": "💰 Цены", "en": "💰 Prices"},
@@ -76,6 +77,7 @@ TEXTS = {
     "btn_settings": {"uz": "⚙️ Sozlamalar", "ru": "⚙️ Настройки", "en": "⚙️ Settings"},
     "btn_send_phone": {"uz": "📱 Raqamni yuborish", "ru": "📱 Отправить номер", "en": "📱 Send phone number"},
     "btn_send_location": {"uz": "📍 Joylashuvni yuborish", "ru": "📍 Отправить геолокацию", "en": "📍 Send location"},
+    "btn_type_address": {"uz": "✍️ Manzilni yozib kiritish", "ru": "✍️ Ввести адрес текстом", "en": "✍️ Type address manually"},
     "btn_skip_photo": {"uz": "⏭ O'tkazib yuborish", "ru": "⏭ Пропустить", "en": "⏭ Skip"},
 
     "customer_menu_welcome": {
@@ -113,6 +115,11 @@ TEXTS = {
         "uz": "📍 Manzilingiz joylashuvini yuboring:",
         "ru": "📍 Отправьте геолокацию вашего адреса:",
         "en": "📍 Please share your location:",
+    },
+    "ask_address_text": {
+        "uz": "✍️ Manzilingizni to'liq yozing (mahalla, ko'cha, uy raqami):",
+        "ru": "✍️ Напишите ваш полный адрес (район, улица, номер дома):",
+        "en": "✍️ Type your full address (neighborhood, street, house number):",
     },
     "ask_phone": {
         "uz": "📱 Telefon raqamingizni yuboring:",

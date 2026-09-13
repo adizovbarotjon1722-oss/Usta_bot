@@ -91,6 +91,36 @@ usta-xizmati/
 
 ## Ushbu yangilanishda qo'shilganlar
 
+**Lokatsiya va qulaylik:**
+- Mijoz endi manzilni GPS orqali YOKI qo'lda yozib kiritishi mumkin (agar
+  joylashuvni ulashishni xohlamasa/ololmasa) — bu "qotib qolish" muammosini
+  butunlay bartaraf etadi
+- Masofa noma'lum bo'lganda "masofa noma'lum" deb chiroyli ko'rsatiladi
+
+**Admin panel — endi to'liq tugma asosida:**
+- 💰 Balans qo'shish, 🚫/🔓 Ustani va mijozni bloklash/blokdan chiqarish,
+  💬 Foydalanuvchiga javob, ➖ Jamg'aradan to'lov — barchasi bosqichma-bosqich
+  so'rov orqali (ID, summa, matn), buyruq yozish shart emas
+- 📊 **Statistika** — jami/bugungi buyurtmalar, aylanma, komissiya daromadi,
+  o'rtacha reyting, jamg'arma balansi — bitta ekranda
+- 📢 **Ommaviy xabar** — barcha ustalarga yoki barcha mijozlarga bir vaqtda
+  e'lon yuborish
+- 🧾 **Admin harakatlari jurnali** — kim, qachon, nima qildi (balans qo'shish,
+  bloklash, ommaviy xabar) — javobgarlik va nazorat uchun
+
+## Muhim — "admin uchun alohida oyna" haqida
+
+Bu so'rovni ikki xil tushunish mumkin:
+1. **Telegram ichida alohida rejim** — bu allaqachon mavjud: admin `/admin`
+   yoki oddiy `/start` bosganda butunlay boshqa menyu (yuqoridagi barcha
+   tugmalar) ochiladi, mijoz/usta menyusidan farq qiladi.
+2. **Haqiqiy alohida dastur (veb-sayt/desktop panel)** — bu Telegram bot
+   doirasidan tashqarida, butunlay boshqa texnologiya (veb-server, hosting,
+   domen) talab qiladigan **alohida loyiha**. Buni ham xohlasangiz, alohida
+   muhokama qilib, boshidan rejalashtirish kerak bo'ladi.
+
+
+
 **Xavfsizlik va ishonch:**
 1. Mijozning aniq manzili endi faqat narx tasdiqlangandan SO'NG ustaga yuboriladi
 2. **Telefon raqamlari butunlay yashiriladi** — mijoz va usta bir-birining
