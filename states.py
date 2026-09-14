@@ -19,6 +19,7 @@ class MasterRegister(StatesGroup):
     sending_qualification = State()
     entering_phone = State()
     entering_extra_phone = State()
+    entering_reference_contact = State()
     choosing_service = State()
     sending_location = State()
     sending_photo = State()

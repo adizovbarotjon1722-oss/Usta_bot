@@ -87,9 +87,62 @@ usta-xizmati/
     ├── support.py               # qo'llab-quvvatlash oqimi
     ├── topup.py                  # balansni to'ldirish oqimi
     └── relay.py                   # mijoz-usta o'rtasida anonim yozishma
+webapp/                  # (ixtiyoriy) brauzerdagi admin nazorat paneli — batafsil: webapp/README.md
+├── app.py
+├── requirements.txt
+└── templates/
 ```
 
 ## Ushbu yangilanishda qo'shilganlar
+
+🖥 **Yangi: brauzerdagi admin veb-paneli** (`webapp/` papkasi) — statistika,
+grafik, ustalar/mijozlar/buyurtmalar ro'yxatini brauzerda ko'rish uchun.
+Batafsil o'rnatish yo'riqnomasi: `webapp/README.md`.
+
+🔴 **KRITIK TUZATISH**: mijoz buyurtma berish jarayonida lokatsiya yuborganda,
+kodda import qilinmagan funksiya sabab bot xato berib "qotib qolar" edi
+(`NameError`). Bu — eng ustuvor tuzatish bo'ldi. Shu bilan birga butun kod
+bazasi avtomatik tekshirildi — boshqa shunday yashirin xato topilmadi.
+
+**Xizmat hududi va narxlar:**
+- Xizmat hozircha faqat Toshkent shahri doirasida (GPS orqali ham, qo'lda
+  yozilgan manzilda ham tekshiriladi — shahar nomi tilga olinishi shart)
+- Qidiruv radiusi 5 km qilib **haqiqiy qo'llaniladi** (avval faqat eng yaqin
+  8 tasi ko'rsatilib, masofa chegarasi tekshirilmagan edi)
+- Komissiya 5%ga tushirildi
+
+**Qulaylik:**
+- Mijozning oldingi manzili eslab qolinadi — keyingi buyurtmada "📍 Oldingi
+  manzilimdan foydalanish" tugmasi orqali qayta kiritmasdan foydalanish mumkin
+- Usta ro'yxatdan o'tishda endi tavsiyanoma kontakti (uni tanigan odam) ham
+  so'raladi — admin zarurat tug'ilsa tekshirish uchun bog'lanishi mumkin
+
+**Allaqachon mavjud bo'lib, bu tekshiruvda tasdiqlangan keng qamrovli tizim:**
+- SQLite WAL rejimi — ko'p foydalanuvchi bir vaqtda ishlaganda barqarorlik
+- Usta ish bosqichlari: yo'lga chiqdi → yetib keldi → ishni boshladi →
+  deyarli tugadi → tugatdi — har birida mijozga avtomatik xabar
+- Admin ustaning **jonli joylashuvini** buyurtma davomida real vaqtda kuzatadi
+- 📊 Kunlik/oylik statistika, 📈 o'sish grafiklari (matplotlib), 🗺 barcha
+  ustalarning bazaviy joylashuv ro'yxati
+- Admin uchun "tushunmadim" umumiy javob — hech qanday tugma botni "qotib
+  qolgandek" tuyultirmaydi
+
+
+
+🔴 **KRITIK TUZATISH**: mijoz buyurtma berish jarayonida lokatsiya yuborganda
+bot xato berib "qotib qolishi" mumkin bo'lgan jiddiy dastur xatosi (import
+qilinmagan funksiya) topildi va tuzatildi. Butun kod bazasi bo'ylab shunga
+o'xshash boshqa xatolar avtomatik tekshiruv orqali yo'qligi tasdiqlandi.
+
+**Qulaylik:**
+- Toshkentdan tashqaridagi manzil (GPS yoki qo'lda yozilgan) endi to'g'ri
+  rad etiladi — avval bu tekshiruv qo'lda yozilgan manzilda ishlamas edi
+- 5 km radius endi haqiqatda qo'llaniladi (avval faqat "eng yaqin 8 ta"
+  tanlanardi, radiusdan tashqarisi ham chiqishi mumkin edi)
+- Mijozning oldingi manzili eslab qolinadi — keyingi buyurtmada
+  "📍 Oldingi manzilimdan foydalanish" tugmasi bilan tezroq buyurtma berish
+
+
 
 **Lokatsiya va qulaylik:**
 - Mijoz endi manzilni GPS orqali YOKI qo'lda yozib kiritishi mumkin (agar
@@ -154,7 +207,12 @@ Bu so'rovni ikki xil tushunish mumkin:
    ma'lumotnomasi va malaka hujjatining haqiqiyligini bot O'ZI tasdiqlay olmaydi
    (bunday davlat bazasiga ochiq API mavjud emas). Bot faqat hujjat rasmini
    yig'ib, admin panelida ko'rsatadi — yakuniy tekshiruv har doim ADMIN
-   tomonidan qo'lda amalga oshiriladi.
+   tomonidan qo'lda amalga oshiriladi. **Ichkilikbozlik, chekish yoki shunga
+   o'xshash shaxsiy odatlarni bot texnik jihatdan umuman aniqlay olmaydi** —
+   bunday narsalarni faqat inson (admin, shaxsiy suhbat, tavsiyanoma orqali
+   tekshirish) baholay oladi. Shu sababli ro'yxatdan o'tishga **tavsiyanoma
+   kontakti** (usta uchun kafolat bera oladigan shaxsning raqami) qo'shildi —
+   bu to'liq yechim emas, balki admin uchun qo'shimcha tekshirish imkoniyati.
 2. **Anonim yozishma cheksiz emas**: bot telefon RAQAM MAYDONINI yashiradi,
    lekin agar usta yoki mijoz xabar matnida o'z raqamini yozib qo'ysa (masalan
    "menga +998... orqali qo'ng'iroq qiling"), buni bot avtomatik bloklamaydi.

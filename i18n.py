@@ -78,6 +78,7 @@ TEXTS = {
     "btn_send_phone": {"uz": "📱 Raqamni yuborish", "ru": "📱 Отправить номер", "en": "📱 Send phone number"},
     "btn_send_location": {"uz": "📍 Joylashuvni yuborish", "ru": "📍 Отправить геолокацию", "en": "📍 Send location"},
     "btn_type_address": {"uz": "✍️ Manzilni yozib kiritish", "ru": "✍️ Ввести адрес текстом", "en": "✍️ Type address manually"},
+    "btn_use_saved_address": {"uz": "📍 Oldingi manzilimdan foydalanish", "ru": "📍 Использовать прошлый адрес", "en": "📍 Use my previous address"},
     "btn_skip_photo": {"uz": "⏭ O'tkazib yuborish", "ru": "⏭ Пропустить", "en": "⏭ Skip"},
 
     "customer_menu_welcome": {

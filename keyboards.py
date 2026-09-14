@@ -25,6 +25,7 @@ BTN_MY_ORDERS_ALL = _all_langs("btn_my_orders")
 BTN_PROMO_ALL = _all_langs("btn_promo")
 BTN_SETTINGS_ALL = _all_langs("btn_settings")
 BTN_TYPE_ADDRESS_ALL = _all_langs("btn_type_address")
+BTN_USE_SAVED_ADDRESS_ALL = _all_langs("btn_use_saved_address")
 
 # ---------- Standart (uz) qiymatlar — eski kod bilan moslik uchun ----------
 BTN_CUSTOMER = TEXTS["btn_customer"]["uz"]
@@ -123,15 +124,14 @@ def contact_request_kb(lang="uz"):
     )
 
 
-def location_request_kb(lang="uz"):
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=t("btn_send_location", lang), request_location=True)],
-            [KeyboardButton(text=t("btn_type_address", lang))],
-            [KeyboardButton(text=t("btn_cancel", lang))],
-        ],
-        resize_keyboard=True,
-    )
+def location_request_kb(lang="uz", offer_saved=False):
+    keyboard = []
+    if offer_saved:
+        keyboard.append([KeyboardButton(text=t("btn_use_saved_address", lang))])
+    keyboard.append([KeyboardButton(text=t("btn_send_location", lang), request_location=True)])
+    keyboard.append([KeyboardButton(text=t("btn_type_address", lang))])
+    keyboard.append([KeyboardButton(text=t("btn_cancel", lang))])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def photo_request_kb(lang="uz"):
@@ -194,6 +194,21 @@ def order_finish_kb(order_id: int):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Bajarildi deb belgilash", callback_data=f"finish_order:{order_id}")]
     ])
+
+
+def stage_kb(order_id: int, stage: str):
+    """Ustaning joriy ish bosqichiga qarab keyingi tugmani ko'rsatadi."""
+    buttons = {
+        "confirmed": [[InlineKeyboardButton(text="🚗 Yo'lga chiqdim", callback_data=f"stage_on_the_way:{order_id}")]],
+        "on_the_way": [[InlineKeyboardButton(text="📍 Yetib keldim", callback_data=f"stage_arrived:{order_id}")]],
+        "arrived": [[InlineKeyboardButton(text="🔧 Ishni boshladim", callback_data=f"stage_working:{order_id}")]],
+        "working": [
+            [InlineKeyboardButton(text="⏳ Deyarli tugadi", callback_data=f"stage_almost_done:{order_id}")],
+            [InlineKeyboardButton(text="✅ Ishni tugatdim", callback_data=f"finish_order:{order_id}")],
+        ],
+        "almost_done": [[InlineKeyboardButton(text="✅ Ishni tugatdim", callback_data=f"finish_order:{order_id}")]],
+    }
+    return InlineKeyboardMarkup(inline_keyboard=buttons.get(stage, buttons["working"]))
 
 
 def skip_comment_kb():
@@ -259,6 +274,8 @@ BTN_ADMIN_FUND_PAYOUT = "➖ Jamg'aradan to'lov"
 BTN_ADMIN_STATS = "📊 Statistika"
 BTN_ADMIN_BROADCAST = "📢 Ommaviy xabar"
 BTN_ADMIN_AUDIT = "🧾 Admin harakatlari"
+BTN_ADMIN_MASTERS_MAP = "🗺 Ustalar joylashuvi"
+BTN_ADMIN_CHART = "📈 O'sish grafigi"
 BTN_ADMIN_HELP = "ℹ️ Buyruqlar ro'yxati"
 BTN_ADMIN_CANCEL = "❌ Bekor qilish"
 
@@ -266,10 +283,11 @@ BTN_ADMIN_CANCEL = "❌ Bekor qilish"
 def admin_menu_kb():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=BTN_ADMIN_STATS)],
+            [KeyboardButton(text=BTN_ADMIN_STATS), KeyboardButton(text=BTN_ADMIN_CHART)],
             [KeyboardButton(text=BTN_ADMIN_PENDING)],
             [KeyboardButton(text=BTN_ADMIN_MASTERS), KeyboardButton(text=BTN_ADMIN_CUSTOMERS)],
             [KeyboardButton(text=BTN_ADMIN_ACTIVE), KeyboardButton(text=BTN_ADMIN_ORDERS)],
+            [KeyboardButton(text=BTN_ADMIN_MASTERS_MAP)],
             [KeyboardButton(text=BTN_ADMIN_ADD_BALANCE), KeyboardButton(text=BTN_ADMIN_REPLY)],
             [KeyboardButton(text=BTN_ADMIN_BLOCK), KeyboardButton(text=BTN_ADMIN_UNBLOCK)],
             [KeyboardButton(text=BTN_ADMIN_BLOCK_CUSTOMER), KeyboardButton(text=BTN_ADMIN_UNBLOCK_CUSTOMER)],

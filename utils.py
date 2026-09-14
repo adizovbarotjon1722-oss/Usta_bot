@@ -38,6 +38,44 @@ def sort_masters_by_distance_and_rating(masters, cust_lat, cust_lon):
     return enriched
 
 
+def filter_masters_within_radius(enriched_masters):
+    """Faqat SEARCH_RADIUS_KM ichidagi ustalarni qoldiradi. Agar mijoz manzilini
+    matn ko'rinishida kiritgan bo'lsa (masofa noma'lum, inf), radius bilan
+    cheklamaymiz — chunki bu holda masofani solishtirib bo'lmaydi."""
+    from config import SEARCH_RADIUS_KM
+    result = []
+    for m, dist in enriched_masters:
+        if dist == float("inf") or dist <= SEARCH_RADIUS_KM:
+            result.append((m, dist))
+    return result
+
+
+def is_within_service_city(latitude, longitude) -> bool:
+    """GPS koordinata xizmat ko'rsatiladigan shahar (Toshkent) chegarasida ekanini tekshiradi."""
+    from config import TASHKENT_LAT_RANGE, TASHKENT_LON_RANGE
+    if latitude is None or longitude is None:
+        return True  # koordinata yo'q — bu tekshiruv matn manzili uchun emas
+    lat_ok = TASHKENT_LAT_RANGE[0] <= latitude <= TASHKENT_LAT_RANGE[1]
+    lon_ok = TASHKENT_LON_RANGE[0] <= longitude <= TASHKENT_LON_RANGE[1]
+    return lat_ok and lon_ok
+
+
+def validate_address_text(text: str) -> tuple:
+    """Qo'lda yozilgan manzil yetarlicha aniq va shahar nomini o'z ichiga
+    olganini tekshiradi. Qaytaradi: (to'g'rimi: bool, sabab_kaliti: str|None)."""
+    from config import SERVICE_CITY_KEYWORDS
+    if not text or len(text.strip()) < 10:
+        return False, "too_short"
+    lowered = text.lower()
+    has_digit = any(ch.isdigit() for ch in text)
+    if not has_digit:
+        return False, "no_house_number"
+    has_city = any(kw in lowered for kw in SERVICE_CITY_KEYWORDS)
+    if not has_city:
+        return False, "no_city"
+    return True, None
+
+
 async def notify_admins(bot, text: str, reply_markup=None):
     """Barcha adminlarga xabar yuborishga urinadi; admin botni bloklagan bo'lsa xatoni yutib yuboradi."""
     from config import ADMIN_IDS
